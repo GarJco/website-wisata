@@ -1,0 +1,33 @@
+name: CI - Build and Push Docker Image
+
+on:
+  push:
+    branches: [ main ]
+
+# Izin ini penting untuk 'checkout' dan 'push' ke GHCR
+permissions:
+  contents: read
+  packages: write # Izin untuk menulis ke GitHub Packages (GHCR)
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          # GITHUB_TOKEN adalah 'secret' otomatis, Anda tidak perlu membuatnya
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} 
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # Membuat tag image: ghcr.io/NAMA_ANDA/NAMA_REPO:latest
+          tags: ghcr.io/${{ github.repository }}:latest
