@@ -12,6 +12,10 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,7 +24,6 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          # GITHUB_TOKEN adalah 'secret' otomatis, Anda tidak perlu membuatnya
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }} 
 
@@ -29,4 +32,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+
+          tags: ghcr.io/garjco/website-wisata:latest
