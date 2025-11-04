@@ -29,5 +29,4 @@ jobs:
         with:
           context: .
           push: true
-          # Membuat tag image: ghcr.io/NAMA_ANDA/NAMA_REPO:latest
           tags: ghcr.io/${{ github.repository }}:latest
