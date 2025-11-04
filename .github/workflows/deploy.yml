@@ -1,0 +1,66 @@
+name: CI/CD Pipeline Web Wisata
+
+# Pemicu: Workflow ini berjalan setiap kali ada 'push' ke branch 'main'
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  # ------------------------------------
+  # JOB 1: Continuous Integration (CI)
+  # ------------------------------------
+  # Tugas: Membangun (build) image Docker dan mengunggahnya (push) ke Docker Hub
+  build-and-push:
+    runs-on: ubuntu-latest # Menjalankan di server Linux virtual milik GitHub
+
+    steps:
+      # Langkah 1: Mengunduh kode Anda dari GitHub ke server virtual
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Langkah 2: Login ke Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # Langkah 3: Membangun image Docker dan mengunggahnya (push)
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .  # Menggunakan Dockerfile dari root folder
+          push: true  # 'true' berarti unggah setelah build
+          tags: garjco/website-wisata:latest # GANTI INI!
+
+  # ------------------------------------
+  # JOB 2: Continuous Deployment (CD)
+  # ------------------------------------
+  # Tugas: Masuk ke server VPS Anda dan jalankan container baru
+  deploy:
+    needs: build-and-push   # Hanya berjalan JIKA job 'build-and-push' sukses
+    runs-on: ubuntu-latest  # Menjalankan di server virtual baru
+
+    steps:
+      # Langkah 1: Masuk ke server VPS Anda menggunakan SSH
+      - name: SSH into server and deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}      # Diambil dari GitHub Secrets
+          username: ${{ secrets.VPS_USER }}  # Diambil dari GitHub Secrets
+          key: ${{ secrets.VPS_SSH_KEY }}    # Diambil dari GitHub Secrets
+          
+          # Perintah yang akan dijalankan di dalam server VPS Anda
+          script: |
+         
+            docker pull garjco/website-wisata:latest
+            
+           
+            docker stop wisata-app || true
+            
+         
+            docker rm wisata-app || true
+            
+          
+            
+            docker run -d -p 80:80 --name wisata-app garjco/website-wisata:latest
